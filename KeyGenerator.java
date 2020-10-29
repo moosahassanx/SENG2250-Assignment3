@@ -1,18 +1,24 @@
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
-public class KeyGenerator
-{
+public class KeyGenerator {
     // attributes
     private BigInteger p;
     private BigInteger g;
     private BigInteger modulusN;
     private BigInteger publicExponent;
-    private BigInteger privateExponent;
     private String publicKey;
-    private BigInteger privateKey;
+    private String privateKey;
     private BigInteger d;
     private char[] HEX_CHARS = "0123456789abcdef".toCharArray();
+    private String message;
+    private BigInteger hexInteger;
+    private String signatureGeneration;
+    private String signatureVerification;
+    private String hash;
 
     // constructor
     public KeyGenerator() {
@@ -23,40 +29,83 @@ public class KeyGenerator
                 "174068207532402095185811980123523436538604490794561350978495831040599953488455823147851597408940950725307797094915759492368300574252438761037084473467180148876118103083043754985190983472601550494691329488083395492313850000361646482644608492304078721818959999056496097769368017749273708962006689187956744210730");
     }
 
-    // accessors
-
-    // mutators
-
     // methods
-    public String generateRSAPublic() throws UnsupportedEncodingException
+    public String generateRSAPublic() throws UnsupportedEncodingException, NoSuchAlgorithmException
     {
         // variables
-        String message = "raris and rovers, these hoes love chief sosa, hit em widda cobra";
-        String hexMessage = hexadecimal(message, "UTF-8");
+        this.message = "raris and rovers, these hoes love chief sosa, hit em widda cobra";
 
-        System.out.println(hexMessage);
+        // message to hex-message conversion
+        String hexStringBuilder = "";
+        byte arr[] = message.getBytes("UTF8");
+        for (byte b : arr)
+        {
+            hexStringBuilder += b;
+        }
+
+        this.hexInteger = new BigInteger(hexStringBuilder);
+
+        System.out.println("hexInteger: " + hexInteger);
         
-        // int messageInt = Integer.parseInt(toHex(message));
-
-        // calculations (http://www.mathaware.org/mam/06/Kaliski.pdf - page 5)
+        // calculations
         this.modulusN = this.p.multiply(this.g);                                // 2. Compute the modulus n as n = pq. 
-        this.publicExponent = new BigInteger("65537");                              // 3. Select an odd public exponent e between 3 and n-1 that is relatively prime to p-1 and q-1. 
+        this.publicExponent = new BigInteger("65537");                          // 3. Select an odd public exponent e between 3 and n-1 that is relatively prime to p-1 and q-1. 
         
         // this.d = findD(messageInt);
 
+        // generating private key
+        BigInteger d = computeD();
+        this.privateKey = "(" + this.p + ", " + this.g + ", " + d + ")";
+        System.out.println("private key: " + privateKey);
+
+        // signatures
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashSplit = digest.digest(this.message.getBytes(StandardCharsets.UTF_8));
+
+        // testing
+        System.out.println("hash: ");
+        for (byte b : hashSplit) 
+        {
+            this.hash += b;
+        }
+
+
         // returner
-        String output = "(" + this.modulusN.toString() + ", " + this.publicExponent.toString() + ")";
-        this.publicKey = output;
-        return output;
+        this.publicKey = "(" + this.modulusN.toString() + ", " + this.publicExponent.toString() + ")";
+        return this.publicKey;
+    }
+
+    public BigInteger computeD()
+    {
+        // find d, such that ed = 1 mod m
+
+        // find 1 mod m
+        int hexInt = hexInteger.intValue();
+        int modm = powmod2(1, 1, hexInt);
+        
+        System.out.println("modm: " + modm);
+
+        String modmString = Integer.toString(modm);
+        BigInteger BigModm = new BigInteger(modmString);
+
+        // d = 1modm / e
+        BigInteger d = BigModm.divide(this.publicExponent);
+        System.out.println("d: " + d);
+
+        return d;
+
     }
 
     // support methods
-    public int powmod2(int base, int exponent, int modulus) {
+    public int powmod2(int base, int exponent, int modulus) 
+    {
         long x = 1;
         long y = base;
 
-        while (exponent > 0) {
-            if (exponent % 2 == 1) {
+        while (exponent > 0) 
+        {
+            if (exponent % 2 == 1) 
+            {
                 x = (x * y) % modulus;
             }
 
@@ -67,7 +116,8 @@ public class KeyGenerator
         return (int) x % modulus;
     }
 
-    public BigInteger findD(int m) {
+    public BigInteger findD(int m) 
+    {
         BigInteger output = null;
 
         // find d, such that ed = 1 mod m
@@ -83,12 +133,6 @@ public class KeyGenerator
         // returner
         return output;
     }
-
-    // public String toHex(String arg)
-    // {
-    // System.out.println("chillin");
-    // return String.format("%040x", new BigInteger(1, arg.getBytes()));
-    // }
 
     public String hexadecimal(String input, String charsetName) throws UnsupportedEncodingException 
     {

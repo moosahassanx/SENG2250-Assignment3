@@ -49,14 +49,14 @@ public class Client
 
             // receiving rsa public key from server
             String ServerRsaPublicKey = reader.readLine();
-            System.out.println(ServerRsaPublicKey);
+            System.out.println("public key received from server:" + ServerRsaPublicKey);
 
             // getting "hello" input from client
             System.out.print("Client_Hello (input client ID): ");
             clientID = userInput.nextLine();
             writer.println(clientID);         // send "hello" to server
 
-
+            
 
         }
         // server could not be found
