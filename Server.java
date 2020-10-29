@@ -42,12 +42,17 @@ public class Server
                 InputStream input = socket.getInputStream();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(input));
 
-                // send message to client
-                String receivedMessage = reader.readLine();
-                System.out.println(receivedMessage);
-
                 // generate keys
-                writer.println();
+                KeyGenerator keyGen = new KeyGenerator();
+                String rsaPublicKey = keyGen.generateRSAPublic();
+                
+                // send to client
+                writer.println(rsaPublicKey);
+                System.out.println("Key has been issued and sent to client");
+
+                // receive client ID from client
+                String receivedMessage = reader.readLine();
+                System.out.println("Client_Hello (ID): " + receivedMessage);
 
             }
         }

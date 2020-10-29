@@ -47,12 +47,16 @@ public class Client
             OutputStream output = socket.getOutputStream();
             PrintWriter writer = new PrintWriter(output, true);
 
+            // receiving rsa public key from server
+            String ServerRsaPublicKey = reader.readLine();
+            System.out.println(ServerRsaPublicKey);
+
             // getting "hello" input from client
             System.out.print("Client_Hello (input client ID): ");
             clientID = userInput.nextLine();
+            writer.println(clientID);         // send "hello" to server
 
-            // send "hello" to server
-            writer.println(hostname + ": " + clientID);
+
 
         }
         // server could not be found
