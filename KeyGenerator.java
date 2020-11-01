@@ -1,6 +1,5 @@
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -58,21 +57,47 @@ public class KeyGenerator {
         this.privateKey = "(" + this.p + ", " + this.g + ", " + d + ")";
         System.out.println("private key: " + privateKey);
 
-        // signatures
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] hashSplit = digest.digest(this.message.getBytes(StandardCharsets.UTF_8));
-
-        // testing
-        System.out.println("hash: ");
-        for (byte b : hashSplit) 
-        {
-            this.hash += b;
-        }
-
+        // signature generation
+        generateSignatures();
 
         // returner
         this.publicKey = "(" + this.modulusN.toString() + ", " + this.publicExponent.toString() + ")";
         return this.publicKey;
+    }
+
+    public void generateSignatures() throws NoSuchAlgorithmException
+    {
+        // SIGNATURE GENERATION
+        String hexIntString = this.hexInteger.toString();
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");     // hashing
+        messageDigest.update(hexIntString.getBytes());
+        String hashString = new String(messageDigest.digest());
+
+        // modulus formula
+        int sigGenBase = Integer.parseInt(hashString);
+        int sigGenExpo = this.d.intValue();
+        int sigGenN = this.modulusN.intValue();
+        
+        // assigning to attribute
+        int sigGenInt = powmod2(sigGenBase, sigGenExpo, sigGenN);
+        this.signatureGeneration = String.valueOf(sigGenInt);
+
+        // SIGNATURE VERIFIER
+        int e = publicExponent.intValue();
+        int sigVerifier = powmod2(sigGenInt, e, sigGenN);
+        this.signatureVerification = String.valueOf(sigVerifier);
+
+        // TODO: testing if it worked
+        System.out.print("Signature generation == verification: ");
+        if(this.signatureGeneration == this.signatureVerification)
+        {
+            System.out.println("TRUE");
+        }
+        else
+        {
+            System.out.println("FALSE");
+        }
+
     }
 
     public BigInteger computeD()
