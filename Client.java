@@ -10,7 +10,6 @@ import java.util.Scanner;
 
 public class Client 
 {
-    
     // attributes
     private static String clientID;
 
@@ -20,7 +19,7 @@ public class Client
         Client.clientID = c;
     }
 
-    public static void main(String args[]) throws IOException 
+    public static void main(String args[]) throws IOException
     {
         // user has not inputted values in command line
         if (args.length < 2) 
@@ -49,25 +48,23 @@ public class Client
 
             // receiving rsa public key from server
             String ServerRsaPublicKey = reader.readLine();
-            System.out.println("public key received from server:" + ServerRsaPublicKey);
+            System.out.println("PUBLIC KEY RECEIVED FROM SERVER:" + ServerRsaPublicKey);
 
             // getting "hello" input from client
             System.out.print("Client_Hello (input client ID): ");
             clientID = userInput.nextLine();
-            writer.println(clientID);         // send "hello" to server
-
-            
+            writer.println(clientID);         // send "hello" to server            
 
         }
         // server could not be found
         catch(UnknownHostException ex)
         {
-            System.out.println("Server not found: " + ex.getMessage());
+            System.out.println("SERVER NOT FOUND: " + ex.getMessage());
         }
         // input error
         catch(IOException ex)
         {
-            System.out.println("I/O error: " + ex.getMessage());
+            System.out.println("I/O ERROR: " + ex.getMessage());
         }
 
         userInput.close();

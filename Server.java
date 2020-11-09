@@ -10,23 +10,23 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.time.LocalDate;
 
-public class Server 
+public class Server
 {
-    public static void main(String args[]) throws NoSuchAlgorithmException, NoSuchProviderException
+    public static void main(String args[]) throws NoSuchAlgorithmException, NoSuchProviderException 
     {
         // user must input a port number through command line
-        if(args.length < 1)
+        if (args.length < 1)
         {
             return;
         }
 
         int port = Integer.parseInt(args[0]);
 
-        try(ServerSocket serverSocket = new ServerSocket(port))
+        try (ServerSocket serverSocket = new ServerSocket(port)) 
         {
             System.out.println("Server is listening on port: " + port);
 
-            while(true)
+            while (true)
             {
                 // every time a new client joins the server, output join message
                 Socket socket = serverSocket.accept();
@@ -44,11 +44,12 @@ public class Server
 
                 // generate keys
                 KeyGenerator keyGen = new KeyGenerator();
-                String rsaPublicKey = keyGen.generateRSAPublic();
-                
+                String rsaPublicKey = keyGen.generateRSAPublic("raris and rovers, these hoes love chief sosa, hit em widda cobra");
+                String rsaPrivateKey = keyGen.generateRSAPrivate();
+
                 // send to client
                 writer.println(rsaPublicKey);
-                System.out.println("Key has been issued and sent to client");
+                System.out.println("Public key has been issued and sent to client");
 
                 // receive client ID from client
                 String receivedMessage = reader.readLine();
@@ -56,7 +57,7 @@ public class Server
 
             }
         }
-        catch(IOException ex)
+        catch (IOException ex)
         {
             System.out.println("Server exception: " + ex.getMessage());
             ex.printStackTrace();
