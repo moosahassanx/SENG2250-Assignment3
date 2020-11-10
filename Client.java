@@ -48,23 +48,26 @@ public class Client
 
             // receiving rsa public key from server
             String ServerRsaPublicKey = reader.readLine();
-            System.out.println("PUBLIC KEY RECEIVED FROM SERVER:" + ServerRsaPublicKey);
+            System.out.println("\n PUBLIC KEY RECEIVED FROM SERVER:" + ServerRsaPublicKey);
 
             // getting "hello" input from client
-            System.out.print("Client_Hello (input client ID): ");
+            System.out.print("\n Client_Hello (input client ID): ");
             clientID = userInput.nextLine();
             writer.println(clientID);         // send "hello" to server            
 
+            // receiving "hello" input from server
+            String server_Hello = reader.readLine();
+            System.out.println("\n RECEIVED HELLO FROM SERVER:" + server_Hello);
         }
         // server could not be found
         catch(UnknownHostException ex)
         {
-            System.out.println("SERVER NOT FOUND: " + ex.getMessage());
+            System.out.println("\n SERVER NOT FOUND: " + ex.getMessage());
         }
         // input error
         catch(IOException ex)
         {
-            System.out.println("I/O ERROR: " + ex.getMessage());
+            System.out.println("\n I/O ERROR: " + ex.getMessage());
         }
 
         userInput.close();

@@ -1,5 +1,6 @@
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class KeyGenerator
@@ -14,6 +15,7 @@ public class KeyGenerator
     private BigInteger d;
     private String message;
     private BigInteger hexInteger;
+    private BigInteger signature;
 
     // constructor
     public KeyGenerator()
@@ -29,10 +31,10 @@ public class KeyGenerator
         this.message = input;
 
         // message to hex-message conversion
-        System.out.println("converting message (\"" + this.message + "\") to BigInteger...");
+        System.out.println("\n converting message (\"" + this.message + "\") to BigInteger...");
         this.hexInteger = new BigInteger(this.message.getBytes("UTF-8"));
 
-        System.out.println("hexInteger: " + hexInteger);
+        System.out.println("\n message in BigInteger form: " + hexInteger);
         
         // calculations
         this.N = this.p.multiply(this.g);
@@ -42,66 +44,36 @@ public class KeyGenerator
 
         // generating private key
         this.privateKey = "(" + this.p + ", " + this.g + ", " + this.d + ")";
-        System.out.println("private key: " + privateKey);
-
-        // signature generation
-        // generateSignatures();
 
         // returner
         this.publicKey = "(" + this.N.toString() + ", " + this.E.toString() + ")";
         return this.publicKey;
     }
 
-    public String generateRSAPrivate()
+    public String generateRSAPrivate() throws NoSuchAlgorithmException
     {
+        // GENERATING SIGNATURE
+        // hash the message
+        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+        messageDigest.update(this.hexInteger.toByteArray());
+        BigInteger hashedMsg = null;
+
+        // pass it through the modpow2 method
+        this.signature = powmod3(hashedMsg, this.d, this.N);
+        System.out.println("\n SIGNATURE: " + this.signature);
+
+        // returning private key
         return this.privateKey;
     }
 
-    public void generateSignatures()
+    // support methods
+    public BigInteger powmod3(BigInteger base, BigInteger exponent, BigInteger modulo)
     {
-        // Signature Generation: s = h(m)^d mod(n)
-        // learn how to hash something
-        // use the powmod2() method to compute s
+        BigInteger bi3 = base.modPow(exponent, modulo);
 
-
-        // Signature Verification h(m) = s^e mod(n)
-
-
-        /*
-        // SIGNATURE GENERATION
-        String hexIntString = this.hexInteger.toString();
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");     // hashing
-        messageDigest.update(hexIntString.getBytes());
-        String hashString = new String(messageDigest.digest());
-
-        // modulus formula
-        int sigGenBase = Integer.parseInt(hashString);
-        int sigGenExpo = this.d.intValue();
-        int sigGenN = this.N.intValue();
-        
-        // assigning to attribute
-        int sigGenInt = powmod2(sigGenBase, sigGenExpo, sigGenN);
-        this.signatureGeneration = String.valueOf(sigGenInt);
-
-        // SIGNATURE VERIFIER
-        int e = E.intValue();
-        int sigVerifier = powmod2(sigGenInt, e, sigGenN);
-        this.signatureVerification = String.valueOf(sigVerifier);
-
-        System.out.print("Signature generation == verification: ");
-        if(this.signatureGeneration == this.signatureVerification)
-        {
-            System.out.println("TRUE");
-        }
-        else
-        {
-            System.out.println("FALSE");
-        }
-        */
-
+        return bi3;
     }
 
-    // support methods
     public int powmod2(int base, int exponent, int modulus) 
     {
         long x = 1;
@@ -128,7 +100,7 @@ public class KeyGenerator
         // find d, such that ed = 1 mod m
         BigInteger sigmaN = this.p.subtract(BigInteger.ONE).multiply(this.g.subtract(BigInteger.ONE));
 
-        System.out.println("\n sigmaN: " + sigmaN);
+        // System.out.println("\n sigmaN: " + sigmaN);
         
         // finding D
         BigInteger D = this.E.modInverse(sigmaN);

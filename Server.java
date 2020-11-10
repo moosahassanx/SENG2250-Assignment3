@@ -46,20 +46,28 @@ public class Server
                 KeyGenerator keyGen = new KeyGenerator();
                 String rsaPublicKey = keyGen.generateRSAPublic("raris and rovers, these hoes love chief sosa, hit em widda cobra");
                 String rsaPrivateKey = keyGen.generateRSAPrivate();
+                System.out.println("\n PRIVATE KEY: " + rsaPrivateKey);
 
                 // send to client
                 writer.println(rsaPublicKey);
-                System.out.println("Public key has been issued and sent to client");
+                System.out.println("\n Public key has been issued and sent to client");
 
                 // receive client ID from client
                 String receivedMessage = reader.readLine();
-                System.out.println("Client_Hello (ID): " + receivedMessage);
+                System.out.println("\n RECEIVED Client_Hello: " + receivedMessage);
+
+                // send Server_Hello
+                String server_Hello = "24F9782, 0H8FD1";
+                writer.println(server_Hello);
+                System.out.println("\n Server_Hello has been sent to client.");
+
+                // DIFFIE HELLMAN
 
             }
         }
         catch (IOException ex)
         {
-            System.out.println("Server exception: " + ex.getMessage());
+            System.out.println("\n Server exception: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
