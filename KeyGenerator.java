@@ -1,5 +1,6 @@
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -54,19 +55,48 @@ public class KeyGenerator
     {
         // GENERATING SIGNATURE
         // hash the message
-        MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-        messageDigest.update(this.hexInteger.toByteArray());
-        BigInteger hashedMsg = null;
+        System.out.println("\n pre-hash: " + this.hexInteger);
+        
+        String hashedMsg = hasher(this.hexInteger.toString());
+
+        System.out.println("\n post-hash: " + hashedMsg);
+
+        // int hashedIntMsg = this.hexInteger.hashCode();
+        // BigInteger hashedMsg = BigInteger.valueOf(hashedIntMsg);
 
         // pass it through the modpow2 method
-        this.signature = powmod3(hashedMsg, this.d, this.N);
-        System.out.println("\n SIGNATURE: " + this.signature);
+        // this.signature = powmod3(hashedMsg, this.d, this.N);
+        // System.out.println("\n SIGNATURE: " + signature);
+
+        // does the hash of the message equal to s^e mod n?
+        BigInteger sae = powmod3(this.signature, this.E, this.N);
+
+        // if(hashedMsg == sae)
+        // {
+        //     System.out.println("\n MATCH!! ");
+        // }
+        // else
+        // {
+        //     System.out.println("\n NOT MATCHING.............");
+
+        //     System.out.println("\n hashedMsg: " + hashedMsg);
+
+        //     System.out.println("\n sae: " + sae);
+        // }
 
         // returning private key
         return this.privateKey;
     }
 
     // support methods
+    public String hasher(String input) throws NoSuchAlgorithmException
+    {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+
+        return hash.toString();
+    }
+
     public BigInteger powmod3(BigInteger base, BigInteger exponent, BigInteger modulo)
     {
         BigInteger bi3 = base.modPow(exponent, modulo);
@@ -95,8 +125,6 @@ public class KeyGenerator
 
     public BigInteger chooseD(BigInteger e, BigInteger m)
     {
-        BigInteger output = null;
-
         // find d, such that ed = 1 mod m
         BigInteger sigmaN = this.p.subtract(BigInteger.ONE).multiply(this.g.subtract(BigInteger.ONE));
 
@@ -107,9 +135,7 @@ public class KeyGenerator
 
         // System.out.println("\n D: " + D);
 
-        output = D;
-
         // returner
-        return output;
+        return D;
     }
 }
