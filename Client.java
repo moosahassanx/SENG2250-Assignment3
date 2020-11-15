@@ -69,7 +69,7 @@ public class Client
 
             // calculate session key
             System.out.println("\n calculating session key");
-            sessionKBA = publicYA.pow(xB.intValue());
+            sessionKBA = keyGen.powmod4(publicYA, xB, keyGen.getP());
             System.out.println("\n SESSION KBA: " + sessionKBA);
             keyGen.setDHPublicKey(sessionKBA);
 

@@ -61,7 +61,7 @@ public class Server
 
                 // calculate session key
                 System.out.println("\n calculating session key");
-                sessionKAB = publicYB.pow(xA.intValue());
+                sessionKAB = keyGen.powmod4(publicYB, xA, keyGen.getP());
                 System.out.println("\n SESSION KAB: " + sessionKAB);
 
                 // generate keys             

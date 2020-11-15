@@ -17,8 +17,8 @@ public class KeyGenerator
     private BigInteger hexInteger;
     private BigInteger signature;
 
-    private BigInteger publicYA;
-    private BigInteger publicYB;
+    private final BigInteger publicYA;
+    private final BigInteger publicYB;
 
     private String diffiePublic;
 
