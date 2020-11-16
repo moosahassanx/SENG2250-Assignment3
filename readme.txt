@@ -2,9 +2,8 @@ FILES:
 - Server.java
 - Client.java
 - EncryptionLibrary.java
+- A3.java
 
 INSTRUCTIONS
-1. Compile Server.java by executing javac Server.java
-2. Compile Client.java by executing javac Client.java
-3. Run Server.java by executing java Server 6868
-4. Run Client.java by executing java Client localhost 6868
+1. Compile A3.java by executing javac A3.java in cmd.
+2. Run by executing java A3 in cmd.

@@ -9,7 +9,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-public class Client 
+public class Client extends Thread
 {
     public static BigInteger bigPow(BigInteger base, BigInteger exponent) 
     {
@@ -26,7 +26,7 @@ public class Client
         return result;
     }
 
-    public static void main(String args[]) throws IOException 
+    public void run()
     {
         // attributes
         BigInteger xB = new BigInteger("7");
@@ -34,15 +34,9 @@ public class Client
         BigInteger publicYA = null;
         BigInteger sessionKBA = null;
 
-        // user has not inputted values in command line
-        if (args.length < 2) 
-        {
-            return;
-        }
-
         // java Clint [hostname] [port]
-        String hostname = args[0];
-        int port = Integer.parseInt(args[1]);
+        String hostname = "localhost";
+        int port = Integer.parseInt("6868");
 
         Scanner userInput = new Scanner(System.in);
 
@@ -88,6 +82,17 @@ public class Client
             // receiving "hello" input from server
             String server_Hello = reader.readLine();
             System.out.println("\n RECEIVED HELLO FROM SERVER:" + server_Hello);
+
+            // receiving HMAC value and encrypted message
+            String HMACandENCRYPTMESSAGE = reader.readLine();
+            System.out.println("\n RECEIVED HMAC AND ENCRYPTED MESSAGE FROM SERVER: " + HMACandENCRYPTMESSAGE);
+
+            // split the hmac and encrypted message
+            String[] splited = HMACandENCRYPTMESSAGE.split(",");
+
+            // decrypt the encrypted message
+            System.out.println("DECRYPTED MESSAGE: " + keyGen.getDecryptedMessage(splited[1]));
+
         }
         // server could not be found
         catch(UnknownHostException ex)

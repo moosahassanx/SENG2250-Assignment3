@@ -8,33 +8,23 @@ import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 
-public class Server
-{
+public class Server extends Thread {
 
-    public static void main(String args[]) throws NoSuchAlgorithmException, NoSuchProviderException 
-    {
+    public void run() {
         // attributes
         BigInteger xA = new BigInteger("13");
         BigInteger publicYA = null;
         BigInteger publicYB = null;
         BigInteger sessionKAB = null;
 
-
-        // user must input a port number through command line
-        if (args.length < 1) 
-        {
-            return;
-        }
-
-        int port = Integer.parseInt(args[0]);
+        int port = Integer.parseInt("6868");
 
         try (ServerSocket serverSocket = new ServerSocket(port))
         {
             System.out.println("Server is listening on port: " + port);
 
-            while (true) 
+            while (true)
             {
                 KeyGenerator keyGen = new KeyGenerator();
 
@@ -52,7 +42,7 @@ public class Server
                 System.out.println("\n calculating public key yA...");
                 publicYA = keyGen.powmod4(keyGen.getG(), xA, keyGen.getP());
                 System.out.println("\n publicYA:" + publicYA);
-                writer.println(publicYA);                           // send public key yA to client
+                writer.println(publicYA); // send public key yA to client
 
                 // receive public key yB
                 String receivedMessage = reader.readLine();
@@ -65,7 +55,7 @@ public class Server
                 System.out.println("\n SESSION KAB: " + sessionKAB);
                 keyGen.setDHPublicKey(sessionKAB);
 
-                // generate keys             
+                // generate keys
                 String rsaPublicKey = keyGen.generateRSAPublic("raris and rovers, these hoes love chief sosa, hit em widda cobra");
                 String rsaPrivateKey = keyGen.generateRSAPrivate();
                 System.out.println("\n PRIVATE KEY: " + rsaPrivateKey);
@@ -83,12 +73,25 @@ public class Server
                 writer.println(server_Hello);
                 System.out.println("\n Server_Hello has been sent to client.");
 
+                // send HMAC value and encrypted message to client
+                String HMACandENCRYPTMESSAGE = keyGen.getHMAC().toString() + "," + keyGen.getEncryptedMessage();
+                writer.println(HMACandENCRYPTMESSAGE);
+                System.out.println("\n HMAC Value and encrypted message has been sent to client.");
+
+                // EXIT PROGRAM
+                writer.close();
+                reader.close();
+                return;
             }
-        }
+        } 
         catch (IOException ex)
         {
             System.out.println("\n Server exception: " + ex.getMessage());
             ex.printStackTrace();
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
         }
     }
 }

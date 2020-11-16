@@ -2,6 +2,11 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 public class KeyGenerator
 {
@@ -22,14 +27,18 @@ public class KeyGenerator
 
     private String diffiePublic;
 
+    private BigInteger HMACValue;
+    String iv;
+
     // constructor
-    public KeyGenerator()
-    {
+    public KeyGenerator() {
         this.p = new BigInteger("178011905478542266528237562450159990145232156369120674273274450314442865788737020770612695252123463079567156784778466449970650770920727857050009668388144034129745221171818506047231150039301079959358067395348717066319802262019714966524135060945913707594956514672855690606794135837542707371727429551343320695239");
         this.g = new BigInteger("174068207532402095185811980123523436538604490794561350978495831040599953488455823147851597408940950725307797094915759492368300574252438761037084473467180148876118103083043754985190983472601550494691329488083395492313850000361646482644608492304078721818959999056496097769368017749273708962006689187956744210730");
         this.publicYA = null;
         this.publicYB = null;
         this.diffiePublic = null;
+        this.HMACValue = null;
+        this.iv = "ayo my slime wyd";
     }
 
     // methods
@@ -67,10 +76,8 @@ public class KeyGenerator
         System.out.println("\n pos-hash: " + hashedMsg);
 
         // HMAC
-        BigInteger HMACValue = HMAC(this.diffiePublic, this.message);
-        
-        System.out.println("\n b: " + HMACValue);
-
+        this.HMACValue = HMAC(this.diffiePublic, this.message);
+        System.out.println("\n HMACValue: " + this.HMACValue);
 
         // pass it through the powmod method
         this.signature = powmod4(hashedMsg, this.d, this.N);       // creating signature
@@ -79,24 +86,119 @@ public class KeyGenerator
         // does the hash of the message equal to s^e mod n?
         BigInteger sae = powmod4(this.signature, this.E, this.N);
 
-        if(hashedMsg == sae)
-        {
-            System.out.println("\n MATCH!! ");
-        }
-        else
-        {
-            System.out.println("\n NOT MATCHING.............");
-
-            System.out.println("\n hashIntMsg: " + hashedMsg);
-
-            System.out.println("\n sae: " + sae);
-        }
-
         // returning private key
         return this.privateKey;
     }
 
     // support methods
+    public static List<String> splitEqually(String text, int size)
+    {
+        // Give the list the right capacity to start with. You could use an array instead if you wanted.
+        List<String> ret = new ArrayList<String>((text.length() + size - 1) / size);
+    
+        for (int start = 0; start < text.length(); start += size)
+        {
+            ret.add(text.substring(start, Math.min(text.length(), start + size)));
+        }
+        return ret;
+    }
+
+    public String encrypt(String plaintext)
+    {
+        try
+        {
+            // IV - a randomly generated thing
+            byte[] ivByte = iv.getBytes();
+
+            // hashed key is session key hashed
+            byte[] hashedKey = hashing(this.diffiePublic.toString());
+            
+            System.out.print("\n hashedKey: ");
+            for (byte b : hashedKey)
+            {
+                System.out.print(b);
+            }
+            System.out.println();
+
+            Cipher AES = Cipher.getInstance("AES/ECB/NoPadding");
+            AES.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(hashedKey, "AES"));
+
+            // split the plaintext into 4 blocks - each block is 16 bytes
+            List<String> plaintextArray = splitEqually(plaintext, 16);
+            
+            String concatBlock = "";
+            // each 16byte block is xor-ed with each bit of IV
+            for (String item : plaintextArray)
+            {
+                // do AES on xor-ed block, then add the result of that to biginteger
+                byte[] itemByte = item.getBytes();
+                byte[] xoredByte = xor(itemByte, ivByte);
+
+                concatBlock += AES.doFinal(xoredByte);
+
+                ivByte = AES.doFinal(xoredByte);
+
+            }
+
+            // for every block after that you xor each bit with the result of the previous block
+            return concatBlock;
+
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
+    public String decrypt(String ciphertext)
+    {
+        try
+        {
+            // IV - a randomly generated thing
+            byte[] ivByte = iv.getBytes();
+
+            // hashed key is session key hashed
+            byte[] hashedKey = hashing(this.diffiePublic.toString());
+
+            System.out.print("\n hashedKey: ");
+            for (byte b : hashedKey)
+            {
+                System.out.print(b);
+            }
+            System.out.println();
+
+            Cipher AES = Cipher.getInstance("AES/ECB/NoPadding");
+            AES.init(Cipher.DECRYPT_MODE, new SecretKeySpec(hashedKey, "AES"));
+
+            // split the ciphertext into 4 blocks - each block is 16 bytes
+            List<String> plaintextArray = splitEqually(ciphertext, 16);
+
+            String concatBlock = "";
+            // each 16byte block is xor-ed with each bit of IV
+            for (String item : plaintextArray)
+            {
+                // do AES on xor-ed block, then add the result of that to biginteger
+                byte[] itemByte = item.getBytes();
+                byte[] xoredByte = xor(itemByte, ivByte);
+
+                concatBlock += AES.doFinal(xoredByte);
+
+                ivByte = AES.doFinal(xoredByte);
+
+            }
+
+            // for every block after that you xor each bit with the result of the previous block
+            return concatBlock;
+
+        }
+        catch(Exception ex)
+        {
+            ex.printStackTrace();
+        }
+        return null;
+    }
+
     public static byte[] concat(byte[] a, byte[] b)
     {
         byte[] result = new byte[a.length + b.length];
@@ -148,10 +250,11 @@ public class KeyGenerator
         try
         {
             BigInteger K_ba = new BigInteger(this.diffiePublic);
-        
+            
+            // opad and ipad in byte array form
             byte[] opad = new byte[32];
             byte[] ipad = new byte[32];
-
+            
             for (int i = 0; i < opad.length; ++i)
             {
                 opad[i] = 0x5c;
@@ -160,9 +263,9 @@ public class KeyGenerator
 
             byte[] m = new String(this.message).getBytes();
             byte[] k = H(K_ba.toByteArray());
-            System.out.format("k = %s\n", toHexString(k));
-            byte[] hmac = H(concat(xor(k, opad), H(concat(xor(k, ipad), m))));
-            System.out.format("hmac = %s\n", toHexString(hmac));
+            System.out.format("\n k = %s\n", toHexString(k));
+            byte[] hmac = H(concat( H(xor(k, opad)), H(concat(xor(k, ipad), m))));
+            System.out.format("\n hmac = %s\n", toHexString(hmac));
 
             BigInteger bigIntHMAC = new BigInteger(hmac);
 
@@ -172,8 +275,18 @@ public class KeyGenerator
         {
             System.out.println("ERROR: " + e);
         }
-        
+
         return E;
+    }
+
+    public byte[] hashing(String input) throws NoSuchAlgorithmException
+    {
+        MessageDigest d = MessageDigest.getInstance("SHA-256");
+        d.update(input.getBytes(), 0, input.length());
+
+        byte[] output = d.digest();
+
+        return output;
     }
 
     public BigInteger hasher(String input) throws NoSuchAlgorithmException
@@ -237,6 +350,21 @@ public class KeyGenerator
     public BigInteger getG()
     {
         return this.g;
+    }
+
+    public BigInteger getHMAC()
+    {
+        return this.HMACValue;
+    }
+
+    public String getEncryptedMessage()
+    {
+        return encrypt(this.message);
+    }
+
+    public String getDecryptedMessage(String input)
+    {
+        return decrypt(input);
     }
 
     // mutators
