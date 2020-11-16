@@ -66,7 +66,11 @@ public class KeyGenerator
         BigInteger hashedMsg = hasher(this.message);
         System.out.println("\n pos-hash: " + hashedMsg);
 
-        System.out.println("hashedIntMsg: " + hashedMsg);
+        // HMAC
+        BigInteger HMACValue = HMAC(this.diffiePublic, this.message);
+        
+        System.out.println("\n b: " + HMACValue);
+
 
         // pass it through the powmod method
         this.signature = powmod4(hashedMsg, this.d, this.N);       // creating signature
@@ -93,10 +97,90 @@ public class KeyGenerator
     }
 
     // support methods
+    public static byte[] concat(byte[] a, byte[] b)
+    {
+        byte[] result = new byte[a.length + b.length];
+
+        for (int i = 0; i < a.length; ++i)
+        {
+            result[i] = a[i];
+        }
+
+        for (int i = 0; i < b.length; ++i)
+        {
+            result[i + a.length] = b[i];
+        }
+
+        return result;
+    }
+
+    public static byte[] H(byte[] x) throws Exception
+    {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        return md.digest(x);
+    }
+
+    public byte[] xor(byte[] a, byte[] b)
+    {
+        byte[] result = new byte[Math.max(a.length, b.length)];
+
+        for (int i = 0; i < result.length; ++i)
+        {
+            result[i] = (byte) (0xff & ((int) a[i] ^ (int) b[i]));
+        }
+        return result;
+    }
+
+    public static String toHexString(byte[] bytes) 
+    {
+        StringBuilder sb = new StringBuilder();
+
+        for (byte b : bytes)
+        {
+            sb.append(String.format("%02X", b));
+        }
+
+        return sb.toString();
+    }
+
+    public BigInteger HMAC(String secretKey,String message) throws RuntimeException
+    {
+        try
+        {
+            BigInteger K_ba = new BigInteger(this.diffiePublic);
+        
+            byte[] opad = new byte[32];
+            byte[] ipad = new byte[32];
+
+            for (int i = 0; i < opad.length; ++i)
+            {
+                opad[i] = 0x5c;
+                ipad[i] = 0x36;
+            }
+
+            byte[] m = new String(this.message).getBytes();
+            byte[] k = H(K_ba.toByteArray());
+            System.out.format("k = %s\n", toHexString(k));
+            byte[] hmac = H(concat(xor(k, opad), H(concat(xor(k, ipad), m))));
+            System.out.format("hmac = %s\n", toHexString(hmac));
+
+            BigInteger bigIntHMAC = new BigInteger(hmac);
+
+            return bigIntHMAC;
+        }
+        catch(Exception e)
+        {
+            System.out.println("ERROR: " + e);
+        }
+        
+        return E;
+    }
+
     public BigInteger hasher(String input) throws NoSuchAlgorithmException
     {
         MessageDigest d = MessageDigest.getInstance("SHA-256");
-        d.update(diffiePublic.getBytes(), 0, diffiePublic.length());
+
+        d.update(this.diffiePublic.getBytes(), 0, this.diffiePublic.length());
 
         BigInteger hashM = new BigInteger(1, d.digest());
 

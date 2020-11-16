@@ -30,7 +30,7 @@ public class Server
 
         int port = Integer.parseInt(args[0]);
 
-        try (ServerSocket serverSocket = new ServerSocket(port)) 
+        try (ServerSocket serverSocket = new ServerSocket(port))
         {
             System.out.println("Server is listening on port: " + port);
 
@@ -63,6 +63,7 @@ public class Server
                 System.out.println("\n calculating session key");
                 sessionKAB = keyGen.powmod4(publicYB, xA, keyGen.getP());
                 System.out.println("\n SESSION KAB: " + sessionKAB);
+                keyGen.setDHPublicKey(sessionKAB);
 
                 // generate keys             
                 String rsaPublicKey = keyGen.generateRSAPublic("raris and rovers, these hoes love chief sosa, hit em widda cobra");
